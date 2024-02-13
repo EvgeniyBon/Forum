@@ -1,16 +1,18 @@
 package telran.java51.service;
 
-import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.List;
-import java.util.Optional;
 
 import org.modelmapper.ModelMapper;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import lombok.RequiredArgsConstructor;
 import telran.java51.dao.ForumRepository;
 import telran.java51.dto.CommentDto;
+import telran.java51.dto.NewPostDto;
+import telran.java51.dto.PostDto;
 import telran.java51.dto.PostPeriodDto;
 import telran.java51.dto.PostUpdateDto;
 import telran.java51.model.Comment;
@@ -23,25 +25,25 @@ public class ForumServiceImpl implements ForumSerivce {
 	final ModelMapper mapper;
 
 	@Override
-	public Post addPost(Post post) {
+	public PostDto addPost(String author, NewPostDto newPostDto) {
+		Post post = mapper.map(newPostDto, Post.class);
+		post.setAuthor(author);
 		forumRepository.save(post);
-		return post;
+		return mapper.map(post, PostDto.class);
 	}
 
 	@Override
-	public Optional<Post> getPostById(String id) {
-		return forumRepository.findById(id);
+	public PostDto getPostById(String id) {
+		Post post = forumRepository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+		return mapper.map(post, PostDto.class);
 	}
 
 	@Override
 
-	public boolean addLike(String id) {
-		Optional<Post> post = forumRepository.findById(id);
-		return post.map(p -> {
-			p.setLikes(p.getLikes() + 1);
-			forumRepository.save(p);
-			return true;
-		}).orElse(false);
+	public void addLike(String id) {
+		Post post = forumRepository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+		post.setLikes(post.getLikes() + 1);
+		forumRepository.save(post);
 	}
 
 	@Override
@@ -50,21 +52,20 @@ public class ForumServiceImpl implements ForumSerivce {
 	}
 
 	@Override
-	public Optional<Post> addComment(String id, CommentDto commentDto) {
-		Optional<Post> post = forumRepository.findById(id);
-		return Optional.ofNullable(post.map(p -> {
-			Comment comment = Comment.builder().user(commentDto.getUser()).likes(0).message(commentDto.getMessage())
-					.dateCreated(LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS)).build();
-			p.getComents().add(comment);
-			return forumRepository.save(p);
-		}).orElse(null));
+	public PostDto addComment(String id, String user, CommentDto commentDto) {
+		Post post = forumRepository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+		Comment comment = Comment.builder().user(user).likes(0).message(commentDto.getMessage()).build();
+		post.getComents().add(comment);
+		forumRepository.save(post);
+		return mapper.map(post, PostDto.class);
 	}
 
 	@Override
-	public Optional<Post> deletePostById(String id) {
-		Optional<Post> post = forumRepository.findById(id);
-		post.ifPresent(p -> forumRepository.delete(p));
-		return post;
+	public PostDto deletePostById(String id) {
+		Post post = forumRepository.findById(id).orElseThrow(
+				() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Post with id = " + id + " not found"));
+		forumRepository.delete(post);
+		return mapper.map(post, PostDto.class);
 	}
 
 	@Override
@@ -78,14 +79,12 @@ public class ForumServiceImpl implements ForumSerivce {
 	}
 
 	@Override
-	public Optional<Post> updatePost(String id, PostUpdateDto postUpdateDto) {
-		Optional<Post> post = forumRepository.findById(id);
-		return Optional.ofNullable(post.map(p -> {
-			p.setTitle(postUpdateDto.getTitle());
-			p.getTags().addAll(postUpdateDto.getTags());
-			p.setContent(postUpdateDto.getContent());
-			forumRepository.save(p);
-			return p;
-		}).orElse(null));
+	public PostDto updatePost(String id, PostUpdateDto postUpdateDto) {
+		Post post = forumRepository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+		post.setTitle(postUpdateDto.getTitle());
+		post.getTags().addAll(postUpdateDto.getTags());
+		post.setContent(postUpdateDto.getContent());
+		forumRepository.save(post);
+		return mapper.map(post, PostDto.class);
 	}
 }

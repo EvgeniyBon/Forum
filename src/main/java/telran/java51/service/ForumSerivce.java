@@ -1,30 +1,31 @@
 package telran.java51.service;
 
 import java.util.List;
-import java.util.Optional;
 
 import telran.java51.dto.CommentDto;
+import telran.java51.dto.NewPostDto;
+import telran.java51.dto.PostDto;
 import telran.java51.dto.PostPeriodDto;
 import telran.java51.dto.PostUpdateDto;
 import telran.java51.model.Post;
 
 public interface ForumSerivce {
-	Post addPost(Post post);
+	PostDto addPost(String author, NewPostDto newPostDto);
 
-	Optional<Post> getPostById(String id);
+	PostDto getPostById(String id);
 
-	boolean addLike(String id);
+	void addLike(String id);
 
 	List<Post> getPostsByAuthor(String author);
 
-	Optional<Post> addComment(String id, CommentDto commentDto);
+	PostDto addComment(String id, String user, CommentDto commentDto);
 
-	Optional<Post> deletePostById(String id);
+	PostDto deletePostById(String id);
 
 	List<Post> findPostByTags(List<String> tags);
 
 	List<Post> findPostByPeriod(PostPeriodDto periodDto);
 
-	Optional<Post> updatePost(String id, PostUpdateDto postUpdateDto);
+	PostDto updatePost(String id, PostUpdateDto postUpdateDto);
 
 }
