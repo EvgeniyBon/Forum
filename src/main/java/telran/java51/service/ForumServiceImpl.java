@@ -1,10 +1,10 @@
 package telran.java51.service;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -47,8 +47,8 @@ public class ForumServiceImpl implements ForumSerivce {
 	}
 
 	@Override
-	public List<Post> getPostsByAuthor(String author) {
-		return forumRepository.getByAuthor(author);
+	public Iterable<PostDto> getPostsByAuthor(String author) {
+		return forumRepository.getByAuthor(author).map(s->mapper.map(s, PostDto.class)).toList();
 	}
 
 	@Override
@@ -69,21 +69,29 @@ public class ForumServiceImpl implements ForumSerivce {
 	}
 
 	@Override
-	public List<Post> findPostByTags(List<String> tags) {
-		return forumRepository.getPostsByTagsInAllIgnoringCase(tags);
+	public Iterable<PostDto> findPostByTags(List<String> tags) {
+		return forumRepository.getPostsByTagsInAllIgnoringCase(tags).map(s -> mapper.map(s, PostDto.class))
+				.collect(Collectors.toList());
+
 	}
 
 	@Override
-	public List<Post> findPostByPeriod(PostPeriodDto periodDto) {
-		return forumRepository.getPostsByDateCreatedBetween(periodDto.getDateFrom(), periodDto.getDateTo());
+	public Iterable<PostDto> findPostByPeriod(PostPeriodDto periodDto) {
+		return forumRepository.getPostsByDateCreatedBetween(periodDto.getDateFrom(), periodDto.getDateTo()).map(s->mapper.map(s, PostDto.class)).toList();
 	}
 
 	@Override
 	public PostDto updatePost(String id, PostUpdateDto postUpdateDto) {
 		Post post = forumRepository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-		post.setTitle(postUpdateDto.getTitle());
-		post.getTags().addAll(postUpdateDto.getTags());
-		post.setContent(postUpdateDto.getContent());
+		if (postUpdateDto.getTitle() != null) {
+			post.setTitle(postUpdateDto.getTitle());
+		}
+		if (postUpdateDto.getTags() != null) {
+			post.getTags().addAll(postUpdateDto.getTags());
+		}
+		if (postUpdateDto.getContent() != null) {
+			post.setContent(postUpdateDto.getContent());
+		}
 		forumRepository.save(post);
 		return mapper.map(post, PostDto.class);
 	}

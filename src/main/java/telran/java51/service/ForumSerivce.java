@@ -7,7 +7,6 @@ import telran.java51.dto.NewPostDto;
 import telran.java51.dto.PostDto;
 import telran.java51.dto.PostPeriodDto;
 import telran.java51.dto.PostUpdateDto;
-import telran.java51.model.Post;
 
 public interface ForumSerivce {
 	PostDto addPost(String author, NewPostDto newPostDto);
@@ -16,15 +15,15 @@ public interface ForumSerivce {
 
 	void addLike(String id);
 
-	List<Post> getPostsByAuthor(String author);
+	Iterable<PostDto> getPostsByAuthor(String author);
 
 	PostDto addComment(String id, String user, CommentDto commentDto);
 
 	PostDto deletePostById(String id);
 
-	List<Post> findPostByTags(List<String> tags);
+	Iterable<PostDto> findPostByTags(List<String> tags);
 
-	List<Post> findPostByPeriod(PostPeriodDto periodDto);
+	Iterable<PostDto> findPostByPeriod(PostPeriodDto periodDto);
 
 	PostDto updatePost(String id, PostUpdateDto postUpdateDto);
 

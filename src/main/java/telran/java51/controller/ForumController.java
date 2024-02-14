@@ -19,7 +19,6 @@ import telran.java51.dto.NewPostDto;
 import telran.java51.dto.PostDto;
 import telran.java51.dto.PostPeriodDto;
 import telran.java51.dto.PostUpdateDto;
-import telran.java51.model.Post;
 import telran.java51.service.ForumServiceImpl;
 
 @RestController
@@ -46,7 +45,7 @@ public class ForumController {
 	}
 
 	@GetMapping("/posts/author/{author}")
-	List<Post> getPostByAuthor(@PathVariable String author) {
+	Iterable<PostDto> getPostByAuthor(@PathVariable String author) {
 		return forumServiceImpl.getPostsByAuthor(author);
 	}
 
@@ -61,12 +60,12 @@ public class ForumController {
 	}
 
 	@PostMapping("/posts/tags")
-	List<Post> getPostByTags(@RequestBody List<String> tags) {
+	Iterable<PostDto> getPostByTags(@RequestBody List<String> tags) {
 		return forumServiceImpl.findPostByTags(tags);
 	}
 
 	@PostMapping("/posts/period")
-	List<Post> getPostByPeriod(@RequestBody PostPeriodDto periodDto) {
+	Iterable<PostDto> getPostByPeriod(@RequestBody PostPeriodDto periodDto) {
 		return forumServiceImpl.findPostByPeriod(periodDto);
 	}
 
