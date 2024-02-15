@@ -1,98 +1,105 @@
-package telran.java51.service;
+package telran.java51.post.service;
 
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.modelmapper.ModelMapper;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
 import lombok.RequiredArgsConstructor;
-import telran.java51.dao.ForumRepository;
-import telran.java51.dto.CommentDto;
-import telran.java51.dto.NewPostDto;
-import telran.java51.dto.PostDto;
-import telran.java51.dto.PostPeriodDto;
-import telran.java51.dto.PostUpdateDto;
-import telran.java51.model.Comment;
-import telran.java51.model.Post;
+import telran.java51.post.dao.PostRepository;
+import telran.java51.post.dto.DatePeriodDto;
+import telran.java51.post.dto.NewCommentDto;
+import telran.java51.post.dto.NewPostDto;
+import telran.java51.post.dto.PostDto;
+import telran.java51.post.dto.exceptions.PostNotFoundException;
+import telran.java51.post.model.Comment;
+import telran.java51.post.model.Post;
 
 @Service
 @RequiredArgsConstructor
-public class ForumServiceImpl implements ForumSerivce {
-	final ForumRepository forumRepository;
-	final ModelMapper mapper;
+public class PostServiceImpl implements PostService {
+	
+	final PostRepository postRepository;
+	final ModelMapper modelMapper;
 
 	@Override
-	public PostDto addPost(String author, NewPostDto newPostDto) {
-		Post post = mapper.map(newPostDto, Post.class);
+	public PostDto addNewPost(String author, NewPostDto newPostDto) {
+		Post post = modelMapper.map(newPostDto, Post.class);
 		post.setAuthor(author);
-		forumRepository.save(post);
-		return mapper.map(post, PostDto.class);
+		post = postRepository.save(post);
+		return modelMapper.map(post, PostDto.class);
 	}
 
 	@Override
-	public PostDto getPostById(String id) {
-		Post post = forumRepository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-		return mapper.map(post, PostDto.class);
+	public PostDto findPostById(String id) {
+		Post post = postRepository.findById(id).orElseThrow(() -> new PostNotFoundException());
+		return modelMapper.map(post, PostDto.class);
 	}
 
 	@Override
+	public PostDto removePost(String id) {
+		Post post = postRepository.findById(id).orElseThrow(() -> new PostNotFoundException());
+		postRepository.delete(post);
+		return modelMapper.map(post, PostDto.class);
+	}
 
+	@Override
+	public PostDto updatePost(String id, NewPostDto newPostDto) {
+		Post post = postRepository.findById(id).orElseThrow(() -> new PostNotFoundException());
+		String content = newPostDto.getContent();
+		if (content != null) {
+			post.setContent(content);
+		}
+		String title = newPostDto.getTitle();
+		if (title != null) {
+			post.setTitle(title);
+		}
+		Set<String> tags = newPostDto.getTags();
+		if (tags != null) {
+			tags.forEach(post::addTag);
+		}
+		postRepository.save(post);
+		return modelMapper.map(post, PostDto.class);
+	}
+
+	@Override
+	public PostDto addComment(String id, String author, NewCommentDto newCommentDto) {
+		Post post = postRepository.findById(id).orElseThrow(() -> new 	PostNotFoundException());
+		Comment comment = new Comment(author, newCommentDto.getMessage());
+		post.addComment(comment);
+		postRepository.save(post);
+		return modelMapper.map(post,  PostDto.class); 
+	}
+
+	@Override
 	public void addLike(String id) {
-		Post post = forumRepository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-		post.setLikes(post.getLikes() + 1);
-		forumRepository.save(post);
+		Post post = postRepository.findById(id).orElseThrow(() -> new PostNotFoundException());
+		post.addLike();
+		postRepository.save(post);
+
 	}
 
 	@Override
-	public Iterable<PostDto> getPostsByAuthor(String author) {
-		return forumRepository.getByAuthor(author).map(s->mapper.map(s, PostDto.class)).toList();
-	}
-
-	@Override
-	public PostDto addComment(String id, String user, CommentDto commentDto) {
-		Post post = forumRepository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-		Comment comment = Comment.builder().user(user).likes(0).message(commentDto.getMessage()).build();
-		post.getComents().add(comment);
-		forumRepository.save(post);
-		return mapper.map(post, PostDto.class);
-	}
-
-	@Override
-	public PostDto deletePostById(String id) {
-		Post post = forumRepository.findById(id).orElseThrow(
-				() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Post with id = " + id + " not found"));
-		forumRepository.delete(post);
-		return mapper.map(post, PostDto.class);
-	}
-
-	@Override
-	public Iterable<PostDto> findPostByTags(List<String> tags) {
-		return forumRepository.getPostsByTagsInAllIgnoringCase(tags).map(s -> mapper.map(s, PostDto.class))
+	public Iterable<PostDto> findPostByAuthor(String author) {
+		return postRepository.findByAuthorIgnoreCase(author)
+				.map(p -> modelMapper.map(p, PostDto.class))
 				.collect(Collectors.toList());
-
 	}
 
 	@Override
-	public Iterable<PostDto> findPostByPeriod(PostPeriodDto periodDto) {
-		return forumRepository.getPostsByDateCreatedBetween(periodDto.getDateFrom(), periodDto.getDateTo()).map(s->mapper.map(s, PostDto.class)).toList();
+	public Iterable<PostDto> findPostsByTags(List<String> tags) {
+		return postRepository.findByTagsInIgnoreCase(tags)
+				.map(p -> modelMapper.map(p, PostDto.class))
+				.collect(Collectors.toList());
 	}
 
 	@Override
-	public PostDto updatePost(String id, PostUpdateDto postUpdateDto) {
-		Post post = forumRepository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-		if (postUpdateDto.getTitle() != null) {
-			post.setTitle(postUpdateDto.getTitle());
-		}
-		if (postUpdateDto.getTags() != null) {
-			post.getTags().addAll(postUpdateDto.getTags());
-		}
-		if (postUpdateDto.getContent() != null) {
-			post.setContent(postUpdateDto.getContent());
-		}
-		forumRepository.save(post);
-		return mapper.map(post, PostDto.class);
+	public Iterable<PostDto> findPostsByPeriod(DatePeriodDto datePeriodDto) {
+		return postRepository.findByDateCreatedBetween(datePeriodDto.getDateFrom(), datePeriodDto.getDateTo())
+				.map(p -> modelMapper.map(p, PostDto.class))
+				.collect(Collectors.toList());
 	}
+
 }

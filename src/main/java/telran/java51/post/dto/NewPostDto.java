@@ -1,11 +1,12 @@
-package telran.java51.dto;
+package telran.java51.post.dto;
 
-import java.util.List;
+import java.util.Set;
 
 import lombok.Getter;
+
 @Getter
 public class NewPostDto {
 	String title;
 	String content;
-	List<String>tags;
+	Set<String> tags;
 }

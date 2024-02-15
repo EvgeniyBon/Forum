@@ -1,22 +1,28 @@
-package telran.java51.dto;
+package telran.java51.post.dto;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
-import lombok.Setter;
-import telran.java51.model.Comment;
+import lombok.NoArgsConstructor;
+import lombok.Singular;
 
 @Getter
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
 public class PostDto {
 	String id;
-	String title;
-	String content;
-	@Setter
-	String author;
-	LocalDateTime dateCreated;
-	Set<String> tags;
-	long likes;
-	List<Comment> coments;
+    String title;
+    String content;
+    String author;
+    LocalDateTime dateCreated;
+    @Singular
+    Set<String> tags;
+    Integer likes;
+    @Singular
+    List<CommentDto> comments;
 }

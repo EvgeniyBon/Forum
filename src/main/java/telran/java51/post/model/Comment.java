@@ -1,23 +1,34 @@
-package telran.java51.model;
+package telran.java51.post.model;
 
 import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 
-import lombok.Builder;
-import lombok.Builder.Default;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
-@Builder
-
+@EqualsAndHashCode(of = { "user", "dateCreated" })
 public class Comment {
+	@Setter
 	String user;
 	@Setter
 	String message;
-	@Default
-	LocalDateTime dateCreated=LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
-	@Setter
-	long likes;
+	LocalDateTime dateCreated;
+	Integer likes;
+
+	public Comment() {
+		dateCreated = LocalDateTime.now();
+		likes = 0;
+	}
+
+	public Comment(String user, String message) {
+		this();
+		this.user = user;
+		this.message = message;
+	}
+	
+	public void addLike() {
+		likes++;
+	}
 
 }

@@ -1,11 +1,11 @@
-package telran.java51.dto;
+package telran.java51.post.dto;
 
 import java.time.LocalDate;
 
 import lombok.Getter;
 
 @Getter
-public class PostPeriodDto {
+public class DatePeriodDto {
 	LocalDate dateFrom;
-	LocalDate dateTo;
+    LocalDate dateTo;
 }
