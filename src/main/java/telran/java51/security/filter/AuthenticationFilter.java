@@ -30,30 +30,30 @@ public class AuthenticationFilter implements Filter {
 			throws IOException, ServletException {
 		HttpServletRequest request = (HttpServletRequest) req;
 		HttpServletResponse response = (HttpServletResponse) resp;
-		System.out.println(request.getServletPath());
-		System.out.println(request.getMethod());
 
 		if (checkEndPoint(request.getMethod(), request.getServletPath())) {
 			UserAccount userAccount;
 			try {
 				String[] credentials = getCredentials(request.getHeader("Authorization"));
-				 userAccount = userAccountRepository.findById(credentials[0])
-						.orElseThrow(() -> new RuntimeException());
+				userAccount = userAccountRepository.findById(credentials[0]).orElseThrow(() -> new RuntimeException());
 				if (!BCrypt.checkpw(credentials[1], userAccount.getPassword())) {
-						throw new RuntimeException();
+					throw new RuntimeException();
 				}
 			} catch (Exception e) {
 				response.sendError(401);
 				return;
 			}
-			request = new WrappedRequest(request,userAccount.getLogin());
+			request = new WrappedRequest(request, userAccount.getLogin());
 		}
-	
+
 		chain.doFilter(request, response);
 	}
 
-	private boolean checkEndPoint(String method, String servletPath) {
-		return !(HttpMethod.POST.matches(method) && servletPath.matches("/account/register/?"));
+	private boolean checkEndPoint(String method, String path) {
+		return !(HttpMethod.POST.matches(method) && path.matches("/account/register/?")
+				|| HttpMethod.GET.matches(method) && path.matches("/forum/posts/author/[^/]*")
+				|| HttpMethod.POST.matches(method) && path.matches("/forum/posts/period")
+				|| HttpMethod.POST.matches(method) && path.matches("/forum/posts/tags"));
 	}
 
 	private String[] getCredentials(String header) {
