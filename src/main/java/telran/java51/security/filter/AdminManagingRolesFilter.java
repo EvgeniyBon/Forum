@@ -3,7 +3,6 @@ package telran.java51.security.filter;
 import java.io.IOException;
 
 import org.springframework.core.annotation.Order;
-import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Component;
 
 import jakarta.servlet.Filter;
@@ -16,6 +15,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import telran.java51.accounting.dao.UserAccountRepository;
 import telran.java51.accounting.model.UserAccount;
+import telran.java51.accounting.roles.Role;
 
 @Component
 @RequiredArgsConstructor
@@ -32,7 +32,7 @@ public class AdminManagingRolesFilter implements Filter {
 		if (checkEndPoint(request.getMethod(), request.getServletPath())) {
 			UserAccount userAccount = userAccountRepository
 					.findById(request.getUserPrincipal().getName()).get();
-			if (!userAccount.getRoles().contains("ADMINISTRATOR")) {
+			if (!userAccount.getRoles().contains(Role.ADMINISTRATOR)) {
 				response.sendError(403, "Permission denied");
 				return;
 			}

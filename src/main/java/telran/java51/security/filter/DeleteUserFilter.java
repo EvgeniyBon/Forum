@@ -17,6 +17,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import telran.java51.accounting.dao.UserAccountRepository;
 import telran.java51.accounting.model.UserAccount;
+import telran.java51.accounting.roles.Role;
 
 @Component
 @Order(40)
@@ -36,7 +37,7 @@ public class DeleteUserFilter implements Filter {
 			String userName = arr[arr.length - 1];
 			UserAccount userAccount = userAccountRepository
 					.findById(principal.getName()).get();
-			if (!(userAccount.getRoles().contains("ADMINISTRATOR") 
+			if (!(userAccount.getRoles().contains(Role.ADMINISTRATOR) 
 					|| principal.getName().equalsIgnoreCase(userName))) {
 				response.sendError(403);
 				return;

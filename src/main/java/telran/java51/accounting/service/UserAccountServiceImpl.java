@@ -3,7 +3,9 @@ package telran.java51.accounting.service;
 import org.mindrot.jbcrypt.BCrypt;
 import org.modelmapper.ModelMapper;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import lombok.RequiredArgsConstructor;
 import telran.java51.accounting.dao.UserAccountRepository;
@@ -14,6 +16,7 @@ import telran.java51.accounting.dto.UserRegisterDto;
 import telran.java51.accounting.dto.exceptions.UserExistsException;
 import telran.java51.accounting.dto.exceptions.UserNotFoundException;
 import telran.java51.accounting.model.UserAccount;
+import telran.java51.accounting.roles.Role;
 
 @Service
 @RequiredArgsConstructor
@@ -64,10 +67,16 @@ public class UserAccountServiceImpl implements UserAccountService, CommandLineRu
 	public RolesDto changeRolesList(String login, String role, boolean isAddRole) {
 		UserAccount userAccount = userAccountRepository.findById(login).orElseThrow(UserNotFoundException::new);
 		boolean res;
+		Role appRole = null;
+		try {
+			appRole = Role.valueOf(role.toUpperCase());
+		} catch (IllegalArgumentException e) {
+			throw new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE, "There is no such role");
+		}
 		if (isAddRole) {
-			res = userAccount.addRole(role);
+			res = userAccount.addRole(appRole);
 		} else {
-			res = userAccount.removeRole(role);
+			res = userAccount.removeRole(appRole);
 		}
 		if (res) {
 			userAccountRepository.save(userAccount);
@@ -88,11 +97,9 @@ public class UserAccountServiceImpl implements UserAccountService, CommandLineRu
 		if (!userAccountRepository.existsById("admin")) {
 			String password = BCrypt.hashpw("admin", BCrypt.gensalt());
 			UserAccount userAccount = new UserAccount("admin", password, "", "");
-			userAccount.addRole("MODERATOR");
-			userAccount.addRole("ADMINISTRATOR");
+			userAccount.addRole(Role.MODERATOR);
+			userAccount.addRole(Role.ADMINISTRATOR);
 			userAccountRepository.save(userAccount);
 		}
-
 	}
-
 }
