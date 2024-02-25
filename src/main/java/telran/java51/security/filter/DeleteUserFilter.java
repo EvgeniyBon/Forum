@@ -1,7 +1,6 @@
 package telran.java51.security.filter;
 
 import java.io.IOException;
-import java.security.Principal;
 
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpMethod;
@@ -14,16 +13,11 @@ import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.RequiredArgsConstructor;
-import telran.java51.accounting.dao.UserAccountRepository;
-import telran.java51.accounting.model.UserAccount;
+import telran.java51.security.model.User;
 
 @Component
 @Order(40)
-@RequiredArgsConstructor
 public class DeleteUserFilter implements Filter {
-	
-	final UserAccountRepository userAccountRepository;
 
 	@Override
 	public void doFilter(ServletRequest req, ServletResponse resp, FilterChain chain)
@@ -31,20 +25,17 @@ public class DeleteUserFilter implements Filter {
 		HttpServletRequest request = (HttpServletRequest) req;
 		HttpServletResponse response = (HttpServletResponse) resp;
 		if (checkEndPoint(request.getMethod(), request.getServletPath())) {
-			Principal principal =  request.getUserPrincipal();
+			User user =(User)  request.getUserPrincipal();
 			String[] arr = request.getServletPath().split("/");
 			String userName = arr[arr.length - 1];
-			UserAccount userAccount = userAccountRepository
-					.findById(principal.getName()).get();
-			if (!(userAccount.getRoles().contains("ADMINISTRATOR") 
-					|| principal.getName().equalsIgnoreCase(userName))) {
+			if (!(user.getRoles().contains("ADMINISTRATOR") 
+					|| user.getName().equalsIgnoreCase(userName))) {
 				response.sendError(403);
 				return;
 			}
 
 		}
 		chain.doFilter(request, response);
-
 	}
 
 	private boolean checkEndPoint(String method, String path) {
